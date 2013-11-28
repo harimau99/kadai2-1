@@ -16,7 +16,7 @@ class TopologyController < Controller
   periodic_timer_event :flood_lldp_frames, 1
 
   def start
-    @fdb = {}
+    @fdb = Hash.new([])
     @command_line = CommandLine.new
     @command_line.parse(ARGV.dup)
     @topology = Topology.new(@command_line.view)
@@ -33,9 +33,10 @@ class TopologyController < Controller
   end
 
   def switch_disconnected(dpid)
-    @fdb.each_pair {|key, value|
+    @fdb.each_pair {|key, value| 
       if value.dpid == dpid
         @fdb.delete(key)
+      end
     }
     @topology.delete_switch dpid
   end
