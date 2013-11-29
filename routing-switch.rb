@@ -50,9 +50,9 @@ class TopologyController < Controller
   def packet_in(dpid, packet_in)
     if packet_in.ipv4?
       # fdb に message の macsa と dpid, in_port を学習させる
-      @fdb [ message.macsa ] << { "dpid" => dpid, "in_port" => message.in_port }
+      @fdb [ packet_in.macsa ] << { "dpid" => dpid, "in_port" => packet_in.in_port }
       # message の macda からポート番号を fdb から引く
-      dest_host = @fdb [ message.macda ]
+      dest_host = @fdb [ packet_in.macda ]
       @topology.add_host packet_in.ipv4_saddr.to_s
       @topology.add_host_to_link dpid, packet_in
     elsif packet_in.lldp?
