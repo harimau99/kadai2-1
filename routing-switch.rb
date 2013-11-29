@@ -19,7 +19,7 @@ class TopologyController < Controller
     @fdb = Hash.new([])
     @command_line = CommandLine.new
     @command_line.parse(ARGV.dup)
-    @topology = Topology.new(@command_line.view)
+    @topology = Topology.new(@command_line)
   end
 
   def switch_ready(dpid)
@@ -48,13 +48,22 @@ class TopologyController < Controller
   end
 
   def packet_in(dpid, packet_in)
-    if packet_in.ipv4?
-      # fdb に message の macsa と dpid, in_port を学習させる
-      @fdb [ packet_in.macsa ] << { "dpid" => dpid, "in_port" => packet_in.in_port }
-      # message の macda からポート番号を fdb から引く
-      dest_host = @fdb [ packet_in.macda ]
+    if packet_in.ipv4? 
       @topology.add_host packet_in.ipv4_saddr.to_s
       @topology.add_host_to_link dpid, packet_in
+
+      # fdb に message の macsa と dpid, in_port を学習させる
+      @fdb [ packet_in.macsa ] << { "dpid" => dpid, "in_port" => packet_in.in_port } unless @fdb.key?(packet_in.macsa)
+      # message の macda からポート番号を fdb から引く
+      dest_host = @fdb [ packet_in.macda ]
+      if dest_host
+        # dijkstra の結果から最短経路の情報を取得
+        links_result = @command_line.shortest_path.get_shortest_path(dpid, dest_host["dpid"])
+        # 最短経路上のスイッチにフローを書込み
+      else
+        # noop or flood
+      end
+
     elsif packet_in.lldp?
       @topology.add_link_by dpid, packet_in
     end

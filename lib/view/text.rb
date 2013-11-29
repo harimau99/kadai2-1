@@ -8,7 +8,7 @@ module View
   class Text
     include Trema::DefaultLogger
 
-    def update(topology)
+    def update_topology(topology)
       topology.each_link do | each |
         info each.to_s
       end

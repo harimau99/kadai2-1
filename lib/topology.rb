@@ -11,16 +11,19 @@ require 'trema-extensions/port'
 class Topology
   include Observable
   extend Forwardable
+  
+  attr_reader :links
+  attr_reader :hosts
 
   def_delegator :@ports, :each_pair, :each_switch
   def_delegator :@hosts, :each, :each_host
   def_delegator :@links, :each, :each_link
 
-  def initialize(view)
+  def initialize(command_line)
     @ports = Hash.new { [].freeze }
     @hosts = []
     @links = []
-    add_observer view
+    add_observer command_line
   end
 
   def delete_switch(dpid)
@@ -50,7 +53,7 @@ class Topology
   def add_link_by(dpid, packet_in)
     fail 'Not an LLDP packet!' unless packet_in.lldp?
     begin
-      maybe_add_link Link.new(dpid, packet_in)
+      maybe_add_link Link.new(dpid, packet_in, false)
     rescue
       return
     end
@@ -65,7 +68,7 @@ class Topology
   def add_host_to_link(dpid, packet_in)
     fail 'Not a IPv4 packet!' unless packet_in.ipv4?
     begin
-      maybe_add_link Link.new(dpid, packet_in)
+      maybe_add_link Link.new(dpid, packet_in, true)
     rescue
       return
     end

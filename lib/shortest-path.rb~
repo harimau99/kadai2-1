@@ -1,26 +1,16 @@
 # -*- coding: utf-8 -*-
-require 'rubygems'
+require 'dijkstraruby'
 
-require 'gli'
-require 'view/text'
-require 'shortest-path'
-
-#
-# command-line options passed to routing-switch.rb
-#
-class CommandLine
-  include GLI::App
-
-  attr_reader :shortest_path
-  attr_reader :view
-  attr_reader :destination_mac
-  attr_reader :port_number
+class ShortestPath
 
   def initialize
-    @shortest_path = ShortestPath.new
-    @port_number = false
-    @view = View::Text.new
+    @shortest_paths = nil
   end
+
+  def calc_shortest_path(topology)
+    
+  end
+  
 
   def parse(argv)
     program_desc 'Topology discovery controller'
@@ -32,7 +22,7 @@ class CommandLine
 
   def update(topology)
     # 最短経路更新
-    @shortest_path.calc_shortest_path(topology)
+    
     @view.update_topology topology
   end
 

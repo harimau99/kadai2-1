@@ -6,12 +6,14 @@ require 'pio/lldp'
 # Edges between two switches.
 #
 class Link
+  attr_reader :is_connected_host 
   attr_reader :dpid_a
   attr_reader :dpid_b
   attr_reader :port_a
   attr_reader :port_b
 
-  def initialize(dpid, packet_in)
+  def initialize(dpid, packet_in, is_connected_host = false)
+    @is_connected_host
     if packet_in.ipv4?
       @dpid_a = packet_in.ipv4_saddr.to_s
       @port_a = 0
@@ -47,6 +49,7 @@ class Link
     ((@dpid_a == dpid) && (@port_a == port)) ||
       ((@dpid_b == dpid) && (@port_b == port))
   end
+
 end
 
 ### Local variables:

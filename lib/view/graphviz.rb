@@ -17,7 +17,7 @@ module View
       @is_port_label = is_port_label
     end
 
-    def update(topology)
+    def update_topology(topology)
       @graphviz = GraphViz.new(:G, use: 'neato', overlap: false, splines: true)
       @nodes.clear
       add_nodes(topology)
