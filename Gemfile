@@ -14,7 +14,7 @@ group :development, :test do
   gem 'reek', '~> 1.3.4'
   gem 'rspec', '~> 2.14.1'
   gem 'rubocop', '~> 0.14.1'
-  gem "dijkstraruby", "~> 0.0.2"
+  gem 'dijkstraruby', '~> 0.0.2'
 end
 
 ### Local variables:
