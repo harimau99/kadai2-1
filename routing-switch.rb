@@ -15,16 +15,18 @@ require 'trema-extensions/port'
 class RoutingSwitch < Controller
   periodic_timer_event :flood_lldp_frames, 1
 
-  FLOWHARDTIMEOUT = 300
+  FLOWHARDTIMEOUT = 10
 
   def start
     @fdb = {}
+    @adb = {}
     @command_line = CommandLine.new
     @command_line.parse(ARGV.dup)
     @topology = Topology.new(@command_line)
   end
 
   def switch_ready(dpid)
+    @adb[dpid] = {} unless @adb.include?(dpid)
     send_message dpid, FeaturesRequest.new
   end
 
@@ -39,6 +41,7 @@ class RoutingSwitch < Controller
       @fdb.delete(key) if value['dpid'] == dpid
     end
     @topology.delete_switch dpid
+    @adb.delete(dpid) if @adb.include?(dpid)
   end
 
   def port_status(dpid, port_status)
@@ -55,6 +58,13 @@ class RoutingSwitch < Controller
       set_flow_for_routing dpid, packet_in, dest_host if dest_host
     elsif packet_in.lldp?
       @topology.add_link_by dpid, packet_in
+    end
+  end
+
+  def flow_removed(dpid, flow_removed)
+    action = @adb[dpid][flow_removed.match.to_s]
+    if action
+      @topology.decrement_link_weight_on_flow dpid, action
     end
   end
 
@@ -76,7 +86,7 @@ class RoutingSwitch < Controller
 
   def set_flow_for_routing(dpid, packet_in, dest_host)
     if dest_host['dpid'] == dpid
-      flow_mod(dpid, packet_in, dest_host['in_port'], FLOWHARDTIMEOUT)
+      flow_mod_to_host(dpid, packet_in, dest_host['in_port'], FLOWHARDTIMEOUT)
       packet_out(dpid, packet_in, dest_host['in_port'])
     else
       sp = @command_line.shortest_path
@@ -84,6 +94,9 @@ class RoutingSwitch < Controller
       if links_result.length > 0
         links_result.each do |each|
           flow_mod(each[0], packet_in, each[1].to_i, FLOWHARDTIMEOUT)
+          key = Match.new(dl_src: packet_in.macsa.to_s, dl_dst: packet_in.macda.to_s).to_s
+          @adb[dpid][key] = each[1] unless @adb[dpid].include?(key)
+          @topology.increment_link_weight_on_flow each[0], each[1]
         end
         packet_out(dpid, packet_in, links_result[0][1].to_i)
       end
@@ -119,6 +132,15 @@ class RoutingSwitch < Controller
   end
 
   def flow_mod(dpid, message, port, timeout)
+    send_flow_mod_add(
+      dpid,
+      hard_timeout: timeout,
+      match: Match.new(dl_src: message.macsa.to_s, dl_dst: message.macda.to_s),
+      actions: SendOutPort.new(port)
+    )
+  end
+
+  def flow_mod_to_host(dpid, message, port, timeout)
     send_flow_mod_add(
       dpid,
       hard_timeout: timeout,

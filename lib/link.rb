@@ -6,11 +6,12 @@ require 'pio/lldp'
 # Edges between two switches.
 #
 class Link
-  attr_reader :is_connected_host
   attr_reader :dpid_a
   attr_reader :dpid_b
   attr_reader :port_a
   attr_reader :port_b
+  attr_reader :is_connected_host
+  attr_reader :weight
 
   def initialize(dpid, packet_in, is_connected_host = false)
     @dpid_a = 0
@@ -19,6 +20,7 @@ class Link
     @port_b = 0
     initialize_dpid_and_port(dpid, packet_in)
     @is_connected_host = is_connected_host
+    @weight = 0
   end
 
   def ==(other)
@@ -34,15 +36,28 @@ class Link
 
   def to_s
     if dpid_a.class == String
-      format '%#s (port %d) <-> %#x (port %d)', dpid_a, port_a, dpid_b, port_b
+      format '%#s (port %d) <- weight: %d -> %#x (port %d)', dpid_a, port_a, weight, dpid_b, port_b
     else
-      format '%#x (port %d) <-> %#x (port %d)', dpid_a, port_a, dpid_b, port_b
+      format '%#x (port %d) <- weight: %d -> %#x (port %d)', dpid_a, port_a, weight, dpid_b, port_b
     end
   end
 
   def has?(dpid, port)
     ((@dpid_a == dpid) && (@port_a == port)) ||
       ((@dpid_b == dpid) && (@port_b == port))
+  end
+
+  def increment_weight
+    @weight += 1
+  end
+
+  def decrement_weight
+    @weight -= 1
+    @weight = 0 if @weight < 0
+  end
+
+  def reset_weight
+    @weight = 0
   end
 
   private

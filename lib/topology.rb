@@ -76,6 +76,23 @@ class Topology
     notify_observers self
   end
 
+  def increment_link_weight_on_flow(dpid, port)
+    @links.each do |each|
+      if each.has?(dpid, port)
+        puts "increment! dpid: " + dpid.to_s + " , port: " + port.to_s
+        each.increment_weight
+      end
+    end
+  end
+
+  def decrement_link_weight_on_flow(dpid, port)
+    @links.each do |each|
+      if each.has?(dpid, port)
+        each.decrement_weight
+      end
+    end
+  end
+
   private
 
   def maybe_add_link(link)

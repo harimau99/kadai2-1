@@ -18,7 +18,7 @@ class ShortestPath
   def calc_shortest_path(topology)
     @link_switches = []
     topology.links.each do |each|
-      temp_link = [[each.dpid_a, each.dpid_b, 1]]
+      temp_link = [[each.dpid_a, each.dpid_b, each.weight]]
       @link_switches += temp_link unless each.is_connected_host
     end
     @graph = Dijkstraruby::Graph.new(@link_switches)
