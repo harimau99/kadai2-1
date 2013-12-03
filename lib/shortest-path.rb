@@ -25,11 +25,11 @@ class ShortestPath
   end
 
   def get_shortest_path(topology, src, dest)
-    @graph = Dijkstraruby::Graph.new(@link_switches)
+    calc_shortest_path topology
     result = @graph.shortest_path src, dest
+    puts result
     links_on_path = separate_each_link_on_path result
     links_result = combine_switch_and_port topology, links_on_path
-    links_result
   end
 
   private

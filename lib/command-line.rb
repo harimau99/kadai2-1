@@ -31,8 +31,8 @@ class CommandLine
   end
 
   def update(topology)
-    @shortest_path.calc_shortest_path(topology)
     @view.update_topology topology
+    @shortest_path.calc_shortest_path topology
   end
 
   private

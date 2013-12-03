@@ -15,7 +15,7 @@ require 'trema-extensions/port'
 class RoutingSwitch < Controller
   periodic_timer_event :flood_lldp_frames, 1
 
-  FLOWHARDTIMEOUT = 10
+  FLOWHARDTIMEOUT = 1000
 
   def start
     @fdb = {}
@@ -65,6 +65,7 @@ class RoutingSwitch < Controller
     action = @adb[dpid][flow_removed.match.to_s]
     if action
       @topology.decrement_link_weight_on_flow dpid, action
+      @adb[dpid].delete(flow_removed.match.to_s)
     end
   end
 
@@ -89,6 +90,7 @@ class RoutingSwitch < Controller
       flow_mod_to_host(dpid, packet_in, dest_host['in_port'], FLOWHARDTIMEOUT)
       packet_out(dpid, packet_in, dest_host['in_port'])
     else
+      puts "macsa: " + packet_in.macsa.to_s
       sp = @command_line.shortest_path
       links_result = sp.get_shortest_path(@topology, dpid, dest_host['dpid'])
       if links_result.length > 0
@@ -98,7 +100,9 @@ class RoutingSwitch < Controller
           @adb[dpid][key] = each[1] unless @adb[dpid].include?(key)
           @topology.increment_link_weight_on_flow each[0], each[1]
         end
-        packet_out(dpid, packet_in, links_result[0][1].to_i)
+        # sleep 2
+        # puts "packet_out dpid: " + dpid.to_s + " port: " + links_result[0][1].to_s
+        # packet_out(dpid, packet_in, links_result[0][1].to_i)
       end
     end
   end
