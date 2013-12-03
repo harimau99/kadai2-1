@@ -10,9 +10,9 @@ require 'trema'
 require 'trema-extensions/port'
 
 #
-# This controller collects network topology information using LLDP.
+# Routing Switch using LLDP to collect network topology information.
 #
-class TopologyController < Controller
+class RoutingSwitch < Controller
   periodic_timer_event :flood_lldp_frames, 1
 
   FLOWHARDTIMEOUT = 300
@@ -55,22 +55,15 @@ class TopologyController < Controller
         @topology.add_host packet_in.ipv4_saddr.to_s
         @topology.add_host_to_link dpid, packet_in
       end
-      # fdb に message の macsa と dpid, in_port を学習させる
       @fdb[ packet_in.macsa ] = { "dpid" => dpid, "in_port" => packet_in.in_port } unless @fdb.key?(packet_in.macsa)
-      # message の macda からポート番号を fdb から引く
       dest_host = @fdb[ packet_in.macda ]
       if dest_host
         if dest_host["dpid"] == dpid
           flow_mod(dpid, packet_in, dest_host["in_port"], FLOWHARDTIMEOUT)
           packet_out(dpid, packet_in, dest_host["in_port"])
         else
-          # dijkstra の結果から最短経路の情報を取得
-          puts "process_dpid " + dpid.to_s
-          puts "dst_dpid " + dest_host["dpid"].to_s
           links_result = @command_line.shortest_path.get_shortest_path(@topology, dpid, dest_host["dpid"])
-          p links_result
-          # 最短経路上のスイッチにフローを書込み
-          if links_result.length > 1
+          if links_result.length > 0
             links_result.each do |each|
               puts "[dpid, port] = [#{each[0]}, #{each[1]}]"
               flow_mod(each[0], packet_in, each[1].to_i, FLOWHARDTIMEOUT)
@@ -79,9 +72,7 @@ class TopologyController < Controller
           end
         end 
       else
-        # noop or flood
       end
-
     elsif packet_in.lldp?
       @topology.add_link_by dpid, packet_in
     end
@@ -132,8 +123,7 @@ class TopologyController < Controller
        :packet_in => message,
        :actions => SendOutPort.new(port)
      )
-   end
-   
+   end  
 end
 
 ### Local variables:

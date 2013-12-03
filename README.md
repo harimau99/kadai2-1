@@ -1,13 +1,13 @@
 kadai2
 ======
 
-※この README.md は ruby-topology のものをベースにしています。
-※必要に応じて書き換える。
+ルーティングスイッチ
 
 使用法
 ------
 
-おなじみ `trema run` で実行すると、トポロジ情報がテキストで見えます。
+おなじみ `trema run` で実行すると、ルーティングスイッチとして動きます。
+併せて、ルーティングのために収集したトポロジ情報がテキスト/グラフで見えます。
 
 スイッチ 3 台の三角形トポロジ:
 
@@ -35,6 +35,14 @@ graphviz でトポロジ画像を出す:
 
 ```shell
 $ trema run "./routing-switch.rb graphviz /tmp/topology.png" -c fullmesh.conf
+```
+
+graphviz でトポロジ画像 (ポート番号付) を出す:
+
+- '-p' オプションを使う
+
+```shell
+$ trema run "./routing-switch.rb -p graphviz /tmp/topology.png" -c fullmesh.conf
 ```
 
 LLDP の宛先 MAC アドレスを任意のやつに変える:
