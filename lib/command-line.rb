@@ -23,7 +23,7 @@ class CommandLine
   end
 
   def parse(argv)
-    program_desc 'Topology discovery controller'
+    program_desc 'Routing switch controller'
     parse_set_flag_and_switch
     define_text_command
     define_graphviz_command
@@ -31,7 +31,6 @@ class CommandLine
   end
 
   def update(topology)
-    # 最短経路更新
     @shortest_path.calc_shortest_path(topology)
     @view.update_topology topology
   end

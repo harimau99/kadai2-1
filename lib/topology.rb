@@ -11,7 +11,7 @@ require 'trema-extensions/port'
 class Topology
   include Observable
   extend Forwardable
-  
+
   attr_reader :links
   attr_reader :hosts
 

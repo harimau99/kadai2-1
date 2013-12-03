@@ -6,24 +6,19 @@ require 'pio/lldp'
 # Edges between two switches.
 #
 class Link
-  attr_reader :is_connected_host 
+  attr_reader :is_connected_host
   attr_reader :dpid_a
   attr_reader :dpid_b
   attr_reader :port_a
   attr_reader :port_b
 
   def initialize(dpid, packet_in, is_connected_host = false)
-    @is_connected_host
-    if packet_in.ipv4?
-      @dpid_a = packet_in.ipv4_saddr.to_s
-      @port_a = 0
-    elsif packet_in.lldp?
-      lldp = Pio::Lldp.read(packet_in.data)
-      @dpid_a = lldp.dpid
-      @port_a = lldp.port_number
-    end
-    @dpid_b = dpid
-    @port_b = packet_in.in_port
+    @dpid_a = 0
+    @dpid_b = 0
+    @port_a = 0
+    @port_b = 0
+    initialize_dpid_and_port(dpid, packet_in)
+    @is_connected_host = is_connected_host
   end
 
   def ==(other)
@@ -50,6 +45,20 @@ class Link
       ((@dpid_b == dpid) && (@port_b == port))
   end
 
+  private
+
+  def initialize_dpid_and_port(dpid, packet_in)
+    if packet_in.ipv4?
+      @dpid_a = packet_in.ipv4_saddr.to_s
+      @port_a = 0
+    elsif packet_in.lldp?
+      lldp = Pio::Lldp.read(packet_in.data)
+      @dpid_a = lldp.dpid
+      @port_a = lldp.port_number
+    end
+    @dpid_b = dpid
+    @port_b = packet_in.in_port
+  end
 end
 
 ### Local variables:

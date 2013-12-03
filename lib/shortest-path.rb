@@ -3,6 +3,10 @@ require 'rubygems'
 
 require 'dijkstraruby'
 
+#
+# Shortest Path information containing path information
+# between all switches.
+#
 class ShortestPath
   attr_accessor :graph
 
@@ -14,25 +18,34 @@ class ShortestPath
   def calc_shortest_path(topology)
     @link_switches = []
     topology.links.each do |each|
-      @link_switches += [[each.dpid_a, each.dpid_b, 1]] unless each.is_connected_host
+      temp_link = [[each.dpid_a, each.dpid_b, 1]]
+      @link_switches += temp_link unless each.is_connected_host
     end
-    puts "link_switches : "
-    p @link_switches
     @graph = Dijkstraruby::Graph.new(@link_switches)
   end
-  
+
   def get_shortest_path(topology, src, dest)
-    links_on_path = []
-    links_result = []
     @graph = Dijkstraruby::Graph.new(@link_switches)
-    result = @graph.shortest_path(src, dest)
-    p result
+    result = @graph.shortest_path src, dest
+    links_on_path = separate_each_link_on_path result
+    links_result = combine_switch_and_port topology, links_on_path
+    links_result
+  end
+
+  private
+
+  def separate_each_link_on_path(result)
+    links_on_path = []
     i = 0
     while i < result[0].size - 1
-      links_on_path += [[result[0][i], result[0][i+1]]]
-      p links_on_path
+      links_on_path += [[result[0][i], result[0][i + 1]]]
       i += 1
     end
+    links_on_path
+  end
+
+  def combine_switch_and_port(topology, links_on_path)
+    links_result = []
     links_on_path.each do |each|
       topology.links.each do |each2|
         if (each2.dpid_a == each[0]) && (each2.dpid_b == each[1])
@@ -43,7 +56,6 @@ class ShortestPath
     end
     links_result
   end
-  
 end
 
 ### Local variables:

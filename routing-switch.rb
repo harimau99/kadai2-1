@@ -35,11 +35,9 @@ class RoutingSwitch < Controller
   end
 
   def switch_disconnected(dpid)
-    @fdb.each_pair {|key, value| 
-      if value.dpid == dpid
-        @fdb.delete(key)
-      end
-    }
+    @fdb.each_pair do |key, value|
+      @fdb.delete(key) if value['dpid'] == dpid
+    end
     @topology.delete_switch dpid
   end
 
@@ -51,34 +49,46 @@ class RoutingSwitch < Controller
 
   def packet_in(dpid, packet_in)
     if packet_in.ipv4?
-      unless @topology.hosts.include?(packet_in.ipv4_saddr.to_s)
-        @topology.add_host packet_in.ipv4_saddr.to_s
-        @topology.add_host_to_link dpid, packet_in
-      end
-      @fdb[ packet_in.macsa ] = { "dpid" => dpid, "in_port" => packet_in.in_port } unless @fdb.key?(packet_in.macsa)
-      dest_host = @fdb[ packet_in.macda ]
-      if dest_host
-        if dest_host["dpid"] == dpid
-          flow_mod(dpid, packet_in, dest_host["in_port"], FLOWHARDTIMEOUT)
-          packet_out(dpid, packet_in, dest_host["in_port"])
-        else
-          links_result = @command_line.shortest_path.get_shortest_path(@topology, dpid, dest_host["dpid"])
-          if links_result.length > 0
-            links_result.each do |each|
-              puts "[dpid, port] = [#{each[0]}, #{each[1]}]"
-              flow_mod(each[0], packet_in, each[1].to_i, FLOWHARDTIMEOUT)
-            end
-            packet_out(dpid, packet_in, links_result[0][1].to_i)
-          end
-        end 
-      else
-      end
+      add_host_by_packet_in dpid, packet_in
+      learn_new_host_fdb dpid, packet_in
+      dest_host = @fdb[packet_in.macda]
+      set_flow_for_routing dpid, packet_in, dest_host if dest_host
     elsif packet_in.lldp?
       @topology.add_link_by dpid, packet_in
     end
   end
 
   private
+
+  def learn_new_host_fdb(dpid, packet_in)
+    unless @fdb.key?(packet_in.macsa)
+      new_host = { 'dpid' => dpid, 'in_port' => packet_in.in_port }
+      @fdb[packet_in.macsa] = new_host
+    end
+  end
+
+  def add_host_by_packet_in(dpid, packet_in)
+    unless @topology.hosts.include?(packet_in.ipv4_saddr.to_s)
+      @topology.add_host packet_in.ipv4_saddr.to_s
+      @topology.add_host_to_link dpid, packet_in
+    end
+  end
+
+  def set_flow_for_routing(dpid, packet_in, dest_host)
+    if dest_host['dpid'] == dpid
+      flow_mod(dpid, packet_in, dest_host['in_port'], FLOWHARDTIMEOUT)
+      packet_out(dpid, packet_in, dest_host['in_port'])
+    else
+      sp = @command_line.shortest_path
+      links_result = sp.get_shortest_path(@topology, dpid, dest_host['dpid'])
+      if links_result.length > 0
+        links_result.each do |each|
+          flow_mod(each[0], packet_in, each[1].to_i, FLOWHARDTIMEOUT)
+        end
+        packet_out(dpid, packet_in, links_result[0][1].to_i)
+      end
+    end
+  end
 
   def flood_lldp_frames
     @topology.each_switch do |dpid, ports|
@@ -108,22 +118,22 @@ class RoutingSwitch < Controller
     end
   end
 
-   def flow_mod(dpid, message, port, timeout)
+  def flow_mod(dpid, message, port, timeout)
     send_flow_mod_add(
       dpid,
-      :hard_timeout => timeout,
-      :match => Match.new(:dl_dst => message.macda.to_s),
-      :actions => SendOutPort.new(port)
+      hard_timeout: timeout,
+      match: Match.new(dl_dst: message.macda.to_s),
+      actions: SendOutPort.new(port)
     )
   end
 
-   def packet_out(dpid, message, port)
-     send_packet_out(
-       dpid,
-       :packet_in => message,
-       :actions => SendOutPort.new(port)
-     )
-   end  
+  def packet_out(dpid, message, port)
+    send_packet_out(
+      dpid,
+      packet_in: message,
+      actions: SendOutPort.new(port)
+    )
+  end
 end
 
 ### Local variables:
