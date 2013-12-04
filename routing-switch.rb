@@ -15,7 +15,7 @@ require 'trema-extensions/port'
 class RoutingSwitch < Controller
   periodic_timer_event :flood_lldp_frames, 1
 
-  FLOWHARDTIMEOUT = 1000
+  FLOWHARDTIMEOUT = 300
 
   def start
     @fdb = {}

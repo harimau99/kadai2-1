@@ -46,7 +46,7 @@ GEM
       guard (~> 2.0)
       rubocop (~> 0.10)
     json (1.8.1)
-    listen (2.2.0)
+    listen (2.3.1)
       celluloid (>= 0.15.2)
       rb-fsevent (>= 0.9.3)
       rb-inotify (>= 0.9)

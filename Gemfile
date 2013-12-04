@@ -2,6 +2,7 @@ source 'https://rubygems.org'
 
 gem 'ruby-graphviz', '~> 1.0.9'
 gem 'trema', '~> 0.4.5'
+gem 'dijkstraruby', '~> 0.0.2'
 
 group :development, :test do
   gem 'aruba', '~> 0.5.3'
@@ -14,7 +15,6 @@ group :development, :test do
   gem 'reek', '~> 1.3.4'
   gem 'rspec', '~> 2.14.1'
   gem 'rubocop', '~> 0.14.1'
-  gem 'dijkstraruby', '~> 0.0.2'
 end
 
 ### Local variables:
