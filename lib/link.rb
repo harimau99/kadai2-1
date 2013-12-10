@@ -35,10 +35,12 @@ class Link
   end
 
   def to_s
+    format_string_host = '%#s (port %d) <- weight: %d -> %#x (port %d)'
+    format_string = '%#x (port %d) <- weight: %d -> %#x (port %d)'
     if dpid_a.class == String
-      format '%#s (port %d) <- weight: %d -> %#x (port %d)', dpid_a, port_a, weight, dpid_b, port_b
+      format format_string_host, dpid_a, port_a, weight, dpid_b, port_b
     else
-      format '%#x (port %d) <- weight: %d -> %#x (port %d)', dpid_a, port_a, weight, dpid_b, port_b
+      format format_string, dpid_a, port_a, weight, dpid_b, port_b
     end
   end
 

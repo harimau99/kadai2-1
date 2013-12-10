@@ -56,9 +56,8 @@ module View
 
     def get_edge_label_option(link)
       {
-        # 'headlabel' => link.port_b,
-        # 'taillabel' => link.port_a,
-        'label' => link.weight.to_s,
+        'headlabel' => link.port_b,
+        'taillabel' => link.port_a,
         'labeldistance' => LABELDISTANCE,
         'fontsize' => FONTSIZE,
         'labelfontcolor' => LABELFONTCOLOR

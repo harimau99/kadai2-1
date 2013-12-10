@@ -78,18 +78,13 @@ class Topology
 
   def increment_link_weight_on_flow(dpid, port)
     @links.each do |each|
-      if each.has?(dpid, port)
-        puts "increment! dpid: " + dpid.to_s + " , port: " + port.to_s
-        each.increment_weight
-      end
+      each.increment_weight if each.has?(dpid, port)
     end
   end
 
   def decrement_link_weight_on_flow(dpid, port)
     @links.each do |each|
-      if each.has?(dpid, port)
-        each.decrement_weight
-      end
+      each.decrement_weight if each.has?(dpid, port)
     end
   end
 
